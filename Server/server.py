@@ -43,18 +43,29 @@ def client_handler(connection, address):
 
     command = payload["command"]
     if command == "REGISTER":
-        server.register_client(payload, address)
+        success = server.register_client(payload, address)
     elif command == "SEND_MSG":
-        server.send_msg(payload)
+        success = server.send_msg(payload)
     elif command == "CREATE_GROUP":
-        server.create_group(payload)
+        success = server.create_group(payload)
     elif command == "JOIN_GROUP":
-        server.join_group(payload)
+        success = server.join_group(payload)
     elif command == "LEAVE_GROUP":
-        server.leave_group(payload)
+        success = server.leave_group(payload)
     else:
         # TODO: Invalid command
-        pass
+        success = False
+        # pass
+
+    # Send response to client
+    send_payload = {"success": success}
+    try:
+        connection.send(json.dumps(send_payload).encode("utf-8"))
+    except socket.error as e:
+        logger.error("[ERROR] Cannot send " + str(e))
+        connection.close()
+    except Exception as e:
+        logger.error("[ERROR] " + str(e))
 
     connection.close()
 

@@ -41,10 +41,14 @@ def send_msg(client_payload, host, port):
         # Send data
         sock.send(json.dumps(client_payload).encode("utf-8"))
 
+        logger.send("Sending...", client_payload)
+
+        # Receive data from the server
+        received = json.loads(sock.recv(1024).decode("utf-8"))
         logger.send("Sent", client_payload)
 
-        # # Receive data from the server
-        # received = json.loads(sock.recv(1024).decode("utf-8"))
+        if received["success"]:
+            logger.send("Delivered")
 
     except socket.error as e:
         logger.error("Server is down " + str(e))
@@ -66,7 +70,7 @@ def message_sender():
             message = ID
         elif command == "SEND_MSG":
             recipient = inputs[1]
-            message = "".join(inputs[2:])
+            message = " ".join(inputs[2:])
         else:
             recipient = ""
             message = " ".join(inputs[1:])
