@@ -20,8 +20,11 @@ args = parser.parse_args()
 ID = args.ID
 HOST = "localhost"
 PORT = args.port
-ROUTER_HOST = "localhost"
-ROUTER_PORT = args.router_port
+# ROUTER_HOST = "localhost"
+# ROUTER_PORT = args.router_port
+
+HOST_LIST = [("localhost", 8008), ("localhost", 8009)]  # , ("localhost", 8010)]
+primary_idx = 0
 
 # instantiate serialized dispatcher
 global_queue = PyCentralDispatch.global_queue()
@@ -39,16 +42,15 @@ def send_msg(client_payload, host, port):
     try:
         # Server ID is hardcoded to 1 for now
         # Send data
-        sock.send(json.dumps(client_payload).encode("utf-8"))
-
         logger.send("Sending...", client_payload)
+        sock.send(json.dumps(client_payload).encode("utf-8"))
 
         # Receive data from the server
         received = json.loads(sock.recv(1024).decode("utf-8"))
-        logger.send("Sent", client_payload)
-
-        if received["success"]:
-            logger.send("Delivered")
+        logger.send(f"Sent")
+        for k, v in received["success"].items():
+            if v:
+                logger.send(f"Delivered to {k}")
 
     except socket.error as e:
         logger.error("Server is down " + str(e))
@@ -59,6 +61,7 @@ def send_msg(client_payload, host, port):
 
 
 def message_sender():
+    global primary_idx
     while True:
         inp = input()
 
@@ -83,8 +86,11 @@ def message_sender():
             "message": message,  # group name
             "port": PORT,
         }
-
-        start_new_thread(send_msg, (client_payload, ROUTER_HOST, ROUTER_PORT))
+        logger.info(f"sending to primary_idx {primary_idx}")
+        start_new_thread(
+            send_msg,
+            (client_payload, HOST_LIST[primary_idx][0], HOST_LIST[primary_idx][1]),
+        )
 
 
 # Commands
@@ -96,6 +102,7 @@ def message_sender():
 
 
 def client_handler(connection, address):
+    global primary_idx
 
     # Receive data from client
     try:
@@ -109,8 +116,12 @@ def client_handler(connection, address):
         connection.close()
         return
 
-    # TODO: do something with the payload
-    print(payload["sender"], ":", payload["message"])
+    if "command" in payload.keys() and payload["command"] == "UPDATE_PRIMARY":
+        logger.warn(f"Primary server changed to {payload['primary_idx']}")
+        primary_idx = payload["primary_idx"]
+        return
+    else:
+        print(payload["sender"], ":", payload["message"])
 
     connection.close()
 
@@ -131,8 +142,8 @@ def router_listener():
     except socket.error as e:
         logger.error(str(e))
 
+    print("Server is listening on the port {}".format(PORT))
     while True:
-        print("Server is listening on the port {}".format(PORT))
         ServerSocket.listen()
         try:
             accept_connections(ServerSocket)

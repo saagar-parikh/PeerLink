@@ -42,7 +42,7 @@ def send_msg(client_payload, host, port):
         # Send data
         sock.send(json.dumps(client_payload).encode("utf-8"))
 
-        logger.send("Sent", client_payload)
+        logger.send(f"Sent {client_payload}", client_payload)
 
         # # Receive data from the server
         # received = json.loads(sock.recv(1024).decode("utf-8"))
@@ -61,17 +61,41 @@ def send_msg(client_payload, host, port):
 
 
 class Client:
-    def __init__(self, ID, host, port):
+    def __init__(self, ID, host, port, queue=[]):
         self.ID = ID
         self.host = host
         self.port = port
-        self.queue = []
+        self.queue = queue
 
 
 class Server:
     def __init__(self):
         self.client_addr = {}
         self.group_addr = {}
+
+    def to_dict(self):
+        server_dict = {
+            "client_addr": {
+                client_id: client.__dict__
+                for client_id, client in self.client_addr.items()
+            },
+            "group_addr": self.group_addr,
+        }
+        return server_dict
+
+    def to_json(self):
+        return json.dumps(self.to_dict(), indent=4)
+
+    @classmethod
+    def from_json(cls, server_dict):
+        # server_dict = json.loads(json_data)
+        server = cls()
+        server.client_addr = {
+            client_id: Client(**client_data)
+            for client_id, client_data in server_dict["client_addr"].items()
+        }
+        server.group_addr = server_dict["group_addr"]
+        return server
 
     def register_client(self, payload, address):
         client_name = payload["message"]
@@ -80,6 +104,7 @@ class Server:
                 client_name, address[0], payload["port"]
             )
         else:
+            # Reconnection
             self.client_addr[client_name].host = address[0]
             self.client_addr[client_name].port = payload["port"]
         logger.info(f"Registered client {client_name} at {address[0]}:{address[1]}")
@@ -105,9 +130,12 @@ class Server:
                     print("Sent ", send_payload["message"])
                 else:
                     i += 1
-        return True
+        success = {client_name: True}
+        logger.send(f"Registered {client_name}. Success: {success}")
+        return success
 
-    def send_msg(self, payload):
+    def send_msg_command(self, payload):
+        logger.info("Start send_msg_command")
         sender = payload["sender"]
         message = payload["message"]
 
@@ -120,10 +148,11 @@ class Server:
                 target=send_msg, args=(send_payload, recipient.host, recipient.port)
             )
             thread.start()
-            success = thread.join()
+            success = {}
+            success[recipient.ID] = thread.join()
             # print("success:", success)
             # add to queue when false
-            if not success:
+            if not success[recipient.ID]:
                 recipient.queue.append(send_payload)
             return success
 
@@ -132,7 +161,7 @@ class Server:
             group_name = payload["recipient"]
 
             # Send message to group members
-            successes = []
+            successes = {}
             for client in self.group_addr[group_name]:
                 # Don't send message to yourself
                 if client.ID == sender:
@@ -146,11 +175,17 @@ class Server:
                     target=send_msg, args=(send_payload, client.host, client.port)
                 )
                 thread.start()
-                successes.append(thread.join())
-            return successes[0]  # TODO: how to deal with message status in groups?
+                successes[client.ID] = thread.join()
+
+            return successes
+            # return [
+            #     self.group_addr[i].ID
+            #     for i in range(len(self.group_addr))
+            #     if successes[i]
+            # ]  # TODO: how to deal with message status in groups?
         else:
             logger.error(f"Recipient {payload['recipient']} not found")
-            return False
+            return {payload["recipient"]: False}
 
     def create_group(self, payload):
         sender = payload["sender"]
@@ -159,11 +194,11 @@ class Server:
         # Check if group exists
         if group_name in self.group_addr:
             logger.error(f"Group {group_name} already exists")
-            return False
+            return {group_name: False}
         else:
             self.group_addr[group_name] = [self.client_addr[sender]]
             logger.info(f"Created group {group_name}")
-        return True
+        return {group_name: True}
 
     def join_group(self, payload):
         sender = payload["sender"]
@@ -172,11 +207,11 @@ class Server:
         # Check if group exists
         if group_name not in self.group_addr:
             logger.error(f"Group {group_name} not found")
-            return False
+            return {group_name: False}
         else:
             self.group_addr[group_name].append(self.client_addr[sender])
             logger.info(f"Client {sender} joined group {group_name}")
-        return True
+        return {group_name: True}
 
     def leave_group(self, payload):
         sender = payload["sender"]
@@ -185,8 +220,8 @@ class Server:
         # Check if group exists
         if group_name not in self.group_addr:
             logger.error(f"Group {group_name} not found")
-            return False
+            return {group_name: False}
         else:
             self.group_addr[group_name].remove(self.client_addr[sender])
             logger.info(f"Client {sender} left group {group_name}")
-        return True
+        return {group_name: True}
