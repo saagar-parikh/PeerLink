@@ -71,12 +71,14 @@ class TestClient(unittest.TestCase):
         time.sleep(0.5)
         self.client1 = self.new_client("peer1", "8000")
         self.client2 = self.new_client("peer2", "8001")
+        self.client3 = self.new_client("peer3", "8002")
 
     def tearDown(self):
         # Terminate running processes
         self.kill_process(self.sp)
         self.kill_process(self.client1)
         self.kill_process(self.client2)
+        self.kill_process(self.client3)
         # print("tearDown done")
 
     def test_register(self):
@@ -87,18 +89,32 @@ class TestClient(unittest.TestCase):
         self.check_output(self.sp, "Client peer2 registered successfully")
 
     def test_send_msg(self):
+        # Register all clients
         self.write_command(self.client1, "REGISTER\n")
         self.check_output(self.sp, "Client peer1 registered successfully")
         self.write_command(self.client2, "REGISTER\n")
         self.check_output(self.sp, "Client peer2 registered successfully")
+        self.write_command(self.client3, "REGISTER\n")
+        self.check_output(self.sp, "Client peer3 registered successfully")
 
+        # Test peer to peer communication
         self.write_command(self.client1, "SEND_MSG peer2 Hello\n")
         time.sleep(0.5)
         self.check_output(self.client2, "peer1 : Hello")
 
-        self.write_command(self.client2, "SEND_MSG peer1 Hello\n")
+        # Multiple clients send to same client. Test the order of messages received
+        self.write_command(self.client1, "SEND_MSG peer3 Hello\n")
+        self.write_command(self.client2, "SEND_MSG peer3 Hello\n")
         time.sleep(0.5)
-        self.check_output(self.client1, "peer2 : Hello")
+        self.check_output(self.client3, "peer1 : Hello")
+        self.check_output(self.client3, "peer2 : Hello")
+
+        # Single client sends messages to multiple clients. Test if message received
+        self.write_command(self.client1, "SEND_MSG peer2 Hello again\n")
+        self.write_command(self.client1, "SEND_MSG peer3 Hello again\n")
+        time.sleep(0.5)
+        self.check_output(self.client2, "peer1 : Hello again")
+        self.check_output(self.client3, "peer1 : Hello again")
 
 
 if __name__ == "__main__":
