@@ -7,6 +7,7 @@ from datetime import datetime
 from pycentraldispatch import PyCentralDispatch
 from CustomLog import *
 from commands import *
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--host", type=str, default="localhost", help="Host IP address")
@@ -138,6 +139,8 @@ def client_handler(connection, address):
         return
     if command == "REGISTER":
         success = server.register_client(payload, address)
+        if success[payload["sender"]]:
+            print(f"Client {payload['sender']} registered successfully")
     elif command == "SEND_MSG":
         success = server.send_msg_command(payload)
     elif command == "CREATE_GROUP":
@@ -200,11 +203,12 @@ def accept_connections(ServerSocket, target_func=client_handler):
 def main_primary(ServerSocket):
     start_new_thread(send_ckpts, ())
 
-    print("Server is listening on the port {}".format(PORT))
+    logger.info("Server is listening on the port {}".format(PORT))
     while True:
         logger.info("Waiting to listen")
         ServerSocket.listen()
         logger.info("Done listening")
+        sys.stdout.flush()
         try:
             accept_connections(ServerSocket)
         except KeyboardInterrupt:
@@ -223,7 +227,7 @@ def main_backup(ServerSocket):
     # except socket.error as e:
     #     logger.error(str(e))
 
-    print("Server is listening on the port {}".format(PORT))
+    logger.info("Server is listening on the port {}".format(PORT))
     while True:
         ServerSocket.listen()
         try:

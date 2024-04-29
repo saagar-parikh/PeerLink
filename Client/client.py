@@ -37,7 +37,8 @@ def send_msg(client_payload, host, port):
         sock.connect((host, port))
         # print(f"Connected to server {host_list[ind][0]}:{host_list[ind][1]}")
     except socket.error as e:
-        logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
+        # logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
+        print(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
 
     try:
         # Server ID is hardcoded to 1 for now
