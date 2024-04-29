@@ -2,6 +2,7 @@ from datetime import datetime
 import socket
 import argparse
 import json
+import sys
 import time
 import string
 import random
@@ -37,8 +38,7 @@ def send_msg(client_payload, host, port):
         sock.connect((host, port))
         # print(f"Connected to server {host_list[ind][0]}:{host_list[ind][1]}")
     except socket.error as e:
-        # logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
-        print(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
+        logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
 
     try:
         # Server ID is hardcoded to 1 for now
@@ -116,7 +116,6 @@ def client_handler(connection, address):
         logger.error("[ERROR] " + str(e))
         connection.close()
         return
-
     if "command" in payload.keys() and payload["command"] == "UPDATE_PRIMARY":
         logger.warn(f"Primary server changed to {payload['primary_idx']}")
         primary_idx = payload["primary_idx"]
@@ -128,9 +127,15 @@ def client_handler(connection, address):
 
 
 def accept_connections(ServerSocket):
+
     client, address = ServerSocket.accept()
+
+    # print("Listening on", HOST, ":", PORT)
+    # print("peer 1 : Hello")
     # logger.info("Connected to: " + address[0] + ":" + str(address[1]))
+    # print("here")
     global_queue.dispatch_sync(client_handler, args=(client, address))
+    sys.stdout.flush()
     # start_new_thread(client_handler, (client, address))
 
 
@@ -143,7 +148,8 @@ def router_listener():
     except socket.error as e:
         logger.error(str(e))
 
-    print("Server is listening on the port {}".format(PORT))
+    logger.info("Server is listening on the port {}".format(PORT))
+    # print("test")
     while True:
         ServerSocket.listen()
         try:
@@ -151,6 +157,7 @@ def router_listener():
         except KeyboardInterrupt:
             logger.warning("Keyboard interrupt")
             break
+        sys.stdout.flush()
 
 
 def main():

@@ -141,8 +141,12 @@ def client_handler(connection, address):
         success = server.register_client(payload, address)
         if success[payload["sender"]]:
             print(f"Client {payload['sender']} registered successfully")
+            sys.stdout.flush()
     elif command == "SEND_MSG":
         success = server.send_msg_command(payload)
+        if success[payload["recipient"]]:
+            print(f"{payload['sender']} : {payload['message']}")
+            sys.stdout.flush()
     elif command == "CREATE_GROUP":
         success = server.create_group(payload)
     elif command == "JOIN_GROUP":
@@ -208,7 +212,7 @@ def main_primary(ServerSocket):
         logger.info("Waiting to listen")
         ServerSocket.listen()
         logger.info("Done listening")
-        sys.stdout.flush()
+        # sys.stdout.flush()
         try:
             accept_connections(ServerSocket)
         except KeyboardInterrupt:

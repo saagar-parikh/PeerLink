@@ -154,6 +154,7 @@ class Server:
             # add to queue when false
             if not success[recipient.ID]:
                 recipient.queue.append(send_payload)
+            print("Sent to", recipient.ID, recipient.port, success[recipient.ID])
             return success
 
         # Check if recipient is a group
