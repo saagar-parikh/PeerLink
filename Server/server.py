@@ -144,9 +144,12 @@ def client_handler(connection, address):
             sys.stdout.flush()
     elif command == "SEND_MSG":
         success = server.send_msg_command(payload)
-        if success[payload["recipient"]]:
-            print(f"{payload['sender']} : {payload['message']}")
-            sys.stdout.flush()
+        for k, v in success.items():
+            if v:
+                print(f"{payload['sender']} : {payload['message']}")
+        # if payload["recipient"] in server.client_addr and success[payload["recipient"]]:
+        #     print(f"{payload['sender']} : {payload['message']}")
+        #     sys.stdout.flush()
     elif command == "CREATE_GROUP":
         success = server.create_group(payload)
     elif command == "JOIN_GROUP":

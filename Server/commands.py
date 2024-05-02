@@ -163,7 +163,8 @@ class Server:
 
             # Send message to group members
             successes = {}
-            for client in self.group_addr[group_name]:
+            for client_name in self.group_addr[group_name]:
+                client = self.client_addr[client_name]
                 # Don't send message to yourself
                 if client.ID == sender:
                     continue
@@ -197,7 +198,7 @@ class Server:
             logger.error(f"Group {group_name} already exists")
             return {group_name: False}
         else:
-            self.group_addr[group_name] = [self.client_addr[sender]]
+            self.group_addr[group_name] = [sender]
             logger.info(f"Created group {group_name}")
         return {group_name: True}
 
@@ -210,7 +211,7 @@ class Server:
             logger.error(f"Group {group_name} not found")
             return {group_name: False}
         else:
-            self.group_addr[group_name].append(self.client_addr[sender])
+            self.group_addr[group_name].append(sender)
             logger.info(f"Client {sender} joined group {group_name}")
         return {group_name: True}
 
@@ -223,6 +224,6 @@ class Server:
             logger.error(f"Group {group_name} not found")
             return {group_name: False}
         else:
-            self.group_addr[group_name].remove(self.client_addr[sender])
+            self.group_addr[group_name].remove(sender)
             logger.info(f"Client {sender} left group {group_name}")
         return {group_name: True}
