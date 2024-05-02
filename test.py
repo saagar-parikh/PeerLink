@@ -116,6 +116,83 @@ class TestClient(unittest.TestCase):
         self.check_output(self.client2, "peer1 : Hello again")
         self.check_output(self.client3, "peer1 : Hello again")
 
+    def test_group_msg(self):
+        # Register all clients
+        self.write_command(self.client1, "REGISTER\n")
+        self.check_output(self.sp, "Client peer1 registered successfully")
+        self.write_command(self.client2, "REGISTER\n")
+        self.check_output(self.sp, "Client peer2 registered successfully")
+        self.write_command(self.client3, "REGISTER\n")
+        self.check_output(self.sp, "Client peer3 registered successfully")
+
+        # Create group
+        self.write_command(self.client1, "CREATE_GROUP group1\n")
+        self.check_output(self.sp, "Group group1 created successfully")
+
+        # Join group
+        self.write_command(self.client2, "JOIN_GROUP group1\n")
+        self.write_command(self.client3, "JOIN_GROUP group1\n")
+
+        # 1. send message to group
+        self.write_command(self.client1, "SEND_MSG group1 Hello group\n")
+        time.sleep(0.5)
+        self.check_output(self.client2, "peer1 (group1) : Hello group")
+        self.check_output(self.client3, "peer1 (group1) : Hello group")
+        # TODO: message not received by self
+
+        # 2. Leave group and check
+        self.write_command(self.client3, "LEAVE_GROUP group1\n")
+        time.sleep(0.5)
+
+        # Send message to group
+        self.write_command(self.client1, "SEND_MSG group1 Hello group again\n")
+        time.sleep(0.5)
+        self.check_output(self.client2, "peer1 (group1) : Hello group again")
+        # TODO: message not received by client3
+
+        # 3. Rejoin group
+        self.write_command(self.client3, "JOIN_GROUP group1\n")
+        self.write_command(self.client2, "SEND_MSG group1 Hello group from peer2\n")
+        time.sleep(0.5)
+        self.check_output(self.client1, "peer2 (group1) : Hello group from peer2")
+        self.check_output(self.client3, "peer2 (group1) : Hello group from peer2")
+
+        # Create new group
+        self.write_command(self.client2, "CREATE_GROUP group2\n")
+        self.write_command(self.client2, "CREATE_GROUP group3\n")
+        time.sleep(0.1)
+        self.check_output(self.sp, "Group group2 created successfully")
+        self.check_output(self.sp, "Group group3 created successfully")
+
+        # Join new group
+        self.write_command(self.client3, "JOIN_GROUP group2\n")
+        self.write_command(self.client1, "JOIN_GROUP group3\n")
+
+        # At this stage
+        # group1 has peer1, peer2, peer3
+        # group2 has peer2, peer3
+        # group3 has peer1, peer2
+        # OR
+        # peer1 is in group1, group3
+        # peer2 is in group1, group2, group3
+        # peer3 is in group1, group2
+
+        # group1 message
+        self.write_command(self.client3, "SEND_MSG group1 Hello group1\n")
+        time.sleep(0.5)
+        self.check_output(self.client1, "peer3 (group1) : Hello group1")
+        self.check_output(self.client2, "peer3 (group1) : Hello group1")
+
+        # group2 message
+        self.write_command(self.client2, "SEND_MSG group2 Hello group2\n")
+        time.sleep(0.5)
+        self.check_output(self.client3, "peer2 (group2) : Hello group2")
+
+        # group3 message
+        self.write_command(self.client1, "SEND_MSG group3 Hello group3\n")
+        time.sleep(0.5)
+        self.check_output(self.client2, "peer1 (group3) : Hello group3")
+
 
 if __name__ == "__main__":
     unittest.main()
