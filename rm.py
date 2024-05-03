@@ -30,6 +30,12 @@ primary_idx = 0
 
 
 def send_heartbeat_msg(host, port):
+    """
+    Send a heartbeat message to the specified host and port
+
+    host: The IP address of the host
+    port: The port number
+    """
 
     hb_payload = json.dumps({"command": "HEARTBEAT"})
     try:
@@ -64,6 +70,14 @@ def send_heartbeat_msg(host, port):
 
 
 def send_update_msg(host, port, primary_idx):
+    """
+    Send an update message to the specified host and port to inform about the change in primary server
+
+    host: The IP address of the host
+    port: The port number
+    primary_idx: Index of the new primary server in the HOST_LIST
+    """
+
     logger.info(f"Send update msg started for {host}:{port}")
     update_payload = {"command": "UPDATE_PRIMARY", "primary_idx": primary_idx}
     try:
@@ -99,6 +113,11 @@ def send_update_msg(host, port, primary_idx):
 
 
 def change_primary_server():
+    """
+    Change the primary server to the next server in the HOST_LIST.
+    This function is called when the primary server is down.
+    """
+
     global primary_idx
     primary_idx = (primary_idx + 1) % len(HOST_LIST)
     logger.warn(f"Primary server changed to {HOST_LIST[primary_idx]}")
@@ -114,6 +133,14 @@ def change_primary_server():
 
 
 def send_heartbeat_msg_to_all(primary_idx=0):
+    """
+    Send heartbeat messages to all servers in the HOST_LIST.
+    This function is called periodically to check the status of all servers.
+    If the primary server is down, it calls the change_primary_server function.
+
+    primary_idx: Index of the current primary server in the HOST_LIST.
+    """
+
     global HOST_LIST
     for i, (host, port) in enumerate(HOST_LIST):
         success = send_heartbeat_msg(host, port)

@@ -30,6 +30,14 @@ class ReturnValueThread(threading.Thread):
 
 
 def send_msg(client_payload, host, port):
+    """
+    Send a message to the specified host and port and 
+    True if the message is successfully sent else False
+
+    client_payload: Payload to be sent to the client
+    host: The IP address of the host
+    port: The port number
+    """
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
@@ -97,6 +105,14 @@ class Server:
         return server
 
     def register_client(self, payload, address):
+        """
+        Registers a client with the server and returns a
+        dict indicating success or failure of the registration
+        process
+
+        payload: Payload containing client information
+        address: Tuple containing client IP address and port
+        """
         client_name = payload["message"]
         if client_name not in self.client_addr.keys():
             self.client_addr[client_name] = Client(
@@ -134,6 +150,13 @@ class Server:
         return success
 
     def send_msg_command(self, payload):
+        """
+        Sends a message command to the server and
+        returns a dict with the staus if the command 
+        was sent
+
+        payload: Payload containing the message details
+        """
         logger.info("Start send_msg_command")
         sender = payload["sender"]
         message = payload["message"]
@@ -183,12 +206,18 @@ class Server:
             #     self.group_addr[i].ID
             #     for i in range(len(self.group_addr))
             #     if successes[i]
-            # ]  # TODO: how to deal with message status in groups?
+            # ]
         else:
             logger.error(f"Recipient {payload['recipient']} not found")
             return {payload["recipient"]: False}
 
     def create_group(self, payload):
+        """
+        Creates a new group and returns a 
+        dict indicatiing if the group was created or not
+
+        payload: Payload containing group creation details
+        """
         sender = payload["sender"]
         group_name = payload["message"]
 
@@ -202,6 +231,12 @@ class Server:
         return {group_name: True}
 
     def join_group(self, payload):
+        """
+        Adds a client to an existing group and returns
+        a dict indicating success or failure of joining the group
+
+        payload: Payload containing group joining details
+        """
         sender = payload["sender"]
         group_name = payload["message"]
 
@@ -215,6 +250,12 @@ class Server:
         return {group_name: True}
 
     def leave_group(self, payload):
+        """
+        Removes a client from a group and returns a dict
+        indicating success or failure of leaving the group
+
+        payload: Payload containing group leaving details
+        """
         sender = payload["sender"]
         group_name = payload["message"]
 

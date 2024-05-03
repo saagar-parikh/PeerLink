@@ -203,9 +203,7 @@ def client_handler(connection, address):
     elif command == "LEAVE_GROUP":
         success = server.leave_group(payload)
     else:
-        # TODO: Invalid command
         success = {payload["recipient"]: False}
-        # pass
 
     # success is a dict with ID: (True or False)
 
