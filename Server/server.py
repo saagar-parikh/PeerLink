@@ -103,6 +103,8 @@ def accept_ckpts(connection, address):
             # connection.close()
             return
         elif checkpoint["command"] == "UPDATE_PRIMARY":
+            print("Primary server changed")
+            sys.stdout.flush()
             backup = False
             connection.close()
             return
@@ -110,6 +112,8 @@ def accept_ckpts(connection, address):
     # Update state
     server = Server.from_json(checkpoint)
     logger.info("Updated state from checkpoint")
+    print("Checkpoint received")
+    sys.stdout.flush()
 
     # print all clients
     for client_id, client in server.client_addr.items():
@@ -245,6 +249,8 @@ def main_backup(ServerSocket):
             break
         if not backup:
             logger.warn("Exiting main_backup, changing to main_primary")
+            print("Exiting backup, changing to primary")
+            sys.stdout.flush()
             main_primary(ServerSocket)
             return
 

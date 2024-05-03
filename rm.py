@@ -1,5 +1,6 @@
 import socket
 import json
+import sys
 import time
 from _thread import *
 import argparse
@@ -24,7 +25,7 @@ global_queue = PyCentralDispatch.global_queue()
 
 HOST_LIST = [("localhost", 8008), ("localhost", 8009)]  # , ("localhost", 8010)]
 CLIENT_LIST = [("localhost", 8000), ("localhost", 8001), ("localhost", 8002)]
-HEARTBEAT_INTERVAL = 3
+HEARTBEAT_INTERVAL = 2
 primary_idx = 0
 
 
@@ -34,7 +35,7 @@ def send_heartbeat_msg(host, port):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
-        # print(f"Connected to server {host_list[ind][0]}:{host_list[ind][1]}")
+        # logger.info(f"Connected to server {host_list[ind][0]}:{host_list[ind][1]}")
     except socket.error as e:
         logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
 
@@ -68,7 +69,7 @@ def send_update_msg(host, port, primary_idx):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
-        print(f"Connected to server {host}:{port}")
+        logger.info(f"Connected to server {host}:{port}")
     except socket.error as e:
         logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
 
@@ -101,6 +102,8 @@ def change_primary_server():
     global primary_idx
     primary_idx = (primary_idx + 1) % len(HOST_LIST)
     logger.warn(f"Primary server changed to {HOST_LIST[primary_idx]}")
+    print("Primary server changed")
+    sys.stdout.flush()
 
     # Send message to backup that it is primary
     send_update_msg(HOST_LIST[primary_idx][0], HOST_LIST[primary_idx][1], primary_idx)
