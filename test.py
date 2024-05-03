@@ -480,13 +480,13 @@ class TestReplication(BaseTestClient):
 
 
 if __name__ == "__main__":
-    os.system("fuser -k 8000/tcp")
-    os.system("fuser -k 8001/tcp")
-    os.system("fuser -k 8002/tcp")
-    os.system("fuser -k 8050/tcp")
-    os.system("fuser -k 8008/tcp")
-    os.system("fuser -k 8009/tcp")
-    os.system("fuser -k 9000/tcp")
+    # os.system("fuser -k 8000/tcp")
+    # os.system("fuser -k 8001/tcp")
+    # os.system("fuser -k 8002/tcp")
+    # os.system("fuser -k 8050/tcp")
+    # os.system("fuser -k 8008/tcp")
+    # os.system("fuser -k 8009/tcp")
+    # os.system("fuser -k 9000/tcp")
     register = unittest.TestLoader().loadTestsFromTestCase(TestRegister)
     send_msg = unittest.TestLoader().loadTestsFromTestCase(TestSendMsg)
     group_msg = unittest.TestLoader().loadTestsFromTestCase(TestGroupMsg)
