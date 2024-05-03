@@ -507,47 +507,47 @@ if __name__ == "__main__":
     passed = 0
     count = 0
     if register_result.wasSuccessful():
-        passed += 10
+        passed += 20
         count += 1
-        print("Test Register PASSED -- 10/10")
+        print("Test Register PASSED -- 20/20")
     else:
-        print("Test Register FAILED -- 0/10")
+        print("Test Register FAILED -- 0/20")
     if send_msg_result.wasSuccessful():
-        passed += 10
+        passed += 20
         count += 1
-        print("Test SendMsg PASSED -- 10/10")
+        print("Test SendMsg PASSED -- 20/20")
     else:
-        print("Test SendMsg FAILED -- 0/10")
+        print("Test SendMsg FAILED -- 0/20")
     if group_msg_result.wasSuccessful():
-        passed += 20
+        passed += 40
         count += 1
-        print("Test GroupMsg PASSED -- 20/20")
+        print("Test GroupMsg PASSED -- 40/40")
     else:
-        print("Test GroupMsg FAILED -- 0/20")
+        print("Test GroupMsg FAILED -- 0/40")
     if msg_states_result.wasSuccessful():
-        passed += 15
+        passed += 30
         count += 1
-        print("Test MsgStates PASSED -- 15/15")
+        print("Test MsgStates PASSED -- 30/30")
     else:
-        print("Test MsgStates FAILED -- 0/15")
+        print("Test MsgStates FAILED -- 0/30")
     if disconnection_result.wasSuccessful():
-        passed += 10
-        count += 1
-        print("Test Disconnection PASSED -- 10/10")
-    else:
-        print("Test Disconnection FAILED -- 0/10")
-    if reconnection_result.wasSuccessful():
-        passed += 15
-        count += 1
-        print("Test Reconnection PASSED -- 15/15")
-    else:
-        print("Test Reconnection FAILED -- 0/15")
-    if replication_result.wasSuccessful():
         passed += 20
         count += 1
-        print("Test Replication PASSED -- 20/20")
+        print("Test Disconnection PASSED -- 20/20")
     else:
-        print("Test Replication FAILED -- 0/20")
+        print("Test Disconnection FAILED -- 0/20")
+    if reconnection_result.wasSuccessful():
+        passed += 30
+        count += 1
+        print("Test Reconnection PASSED -- 30/30")
+    else:
+        print("Test Reconnection FAILED -- 0/30")
+    if replication_result.wasSuccessful():
+        passed += 40
+        count += 1
+        print("Test Replication PASSED -- 40/40")
+    else:
+        print("Test Replication FAILED -- 0/40")
 
-    print("-" * 10)
-    print(f"Passed {count}/7 tests.\nTotal score: {passed}/100")
+    print("-" * 20)
+    print(f"Passed {count}/7 tests.\nTotal score: {passed}/200")
