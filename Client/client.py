@@ -12,6 +12,7 @@ from pycentraldispatch import PyCentralDispatch
 import threading
 from _thread import *
 
+# parse commmand line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument("--ID", type=str, required=True, help="Client ID")
 parser.add_argument("--port", type=int, required=True, help="Client port")
@@ -24,10 +25,9 @@ args = parser.parse_args()
 ID = args.ID
 HOST = "localhost"
 PORT = args.port
-# ROUTER_HOST = "localhost"
-# ROUTER_PORT = args.router_port
 
-HOST_LIST = [("localhost", 8008), ("localhost", 8009)]  # , ("localhost", 8010)]
+# List of router host and ports
+HOST_LIST = [("localhost", 8008), ("localhost", 8009)]
 primary_idx = 0
 
 # instantiate serialized dispatcher
@@ -35,6 +35,13 @@ global_queue = PyCentralDispatch.global_queue()
 
 
 def send_msg(client_payload, host, port):
+    """
+    Sends a message to the specified host and port using TCP via the router
+
+    client_payload: dictionary representing the message payload
+    host: IP address of the recipient
+    port: port address of the recipient
+    """
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,7 +51,6 @@ def send_msg(client_payload, host, port):
         logger.error(f"Trying to connect to server {host}:{port}, Error: {str(e)}")
 
     try:
-        # Server ID is hardcoded to 1 for now
         # Send data
         logger.send("Sending...", client_payload)
         sock.send(json.dumps(client_payload).encode("utf-8"))
@@ -71,6 +77,11 @@ def send_msg(client_payload, host, port):
 
 
 def message_sender():
+    """
+    wrapper function for send_msg to parse user input
+    and construct the message_payload which will be sent
+    to the router  
+    """
     global primary_idx
     while True:
         inp = input()
@@ -112,6 +123,12 @@ def message_sender():
 
 
 def client_handler(connection, address):
+    """
+    Handles incoming client connections
+    
+    connection: socket object representing the client connection
+    address: tuple containing client's address
+    """
     global primary_idx
 
     # Receive data from client
@@ -137,7 +154,13 @@ def client_handler(connection, address):
 
 
 def accept_connections(ServerSocket):
+    """
+    Accepts incoming client connections and dispatches the 
+    connections to client_handler for processing
 
+    serversocket: serversocket object representing the
+    connection
+    """
     client, address = ServerSocket.accept()
 
     # print("Listening on", HOST, ":", PORT)
@@ -150,7 +173,12 @@ def accept_connections(ServerSocket):
 
 
 def router_listener():
-    # Create a socket and bind to a port. SO_REUSEADDR=1 for reusing address
+    """
+    Listens for incoming connections from clients
+    creates a socket and binds to a port. 
+    SO_REUSEADDR=1 for reusing address
+    """
+    
     ServerSocket = socket.socket()
     ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:

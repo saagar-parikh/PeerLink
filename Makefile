@@ -1,4 +1,5 @@
 build:
+	pip install -r requirements.txt
 	echo "Nothing to be built"
 test:
 	python3 test.py -v

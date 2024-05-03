@@ -28,12 +28,22 @@ global_queue = PyCentralDispatch.global_queue()
 
 server = Server()
 
-HOST_LIST = [("localhost", 8008), ("localhost", 8009)]  # , ("localhost", 8010)]
+
+HOST_LIST = [("localhost", 8008), ("localhost", 8009)]
 CHECKPOINT_INTERVAL = 1
 backup = args.backup
 
 
 def send_ckpt_msg(host, port):
+    """
+    method to periodically send checkpoint state by serializing
+    the state of the server to the specified address. The method
+    returns true if the checkpoint message is sent successfully
+    or it returns false
+
+    host: IP address of the recipient
+    port: port number of the recipient
+    """
     global server
 
     checkpoint = server.to_json()
@@ -68,6 +78,10 @@ def send_ckpt_msg(host, port):
 
 
 def send_ckpt_msg_to_all():
+    """
+    wrapper over the send_ckpt_msg to send
+    checkpoints to all the backup servers
+    """
     global HOST_LIST
     for host, port in HOST_LIST:
         if (host, port) != (HOST, PORT):  # if not myself
@@ -75,12 +89,24 @@ def send_ckpt_msg_to_all():
 
 
 def send_ckpts():
+    """
+    method to periodically send checkpoints
+    """
     while True:
         time.sleep(CHECKPOINT_INTERVAL)
         send_ckpt_msg_to_all()
 
 
 def accept_ckpts(connection, address):
+    """
+    method for handling incoming checkpoint messages from other
+    servers. The checkpoint messages are deserialized and checked 
+    if it is a heartbeat or primary update to handle it appropriately
+    The checkpoint messages in this case are a proxy for heartbeats
+
+    connection: sender's socket object
+    address: tuple representing senders address 
+    """
     global server
     global backup
     # Receive data from client
@@ -123,6 +149,21 @@ def accept_ckpts(connection, address):
 
 
 def client_handler(connection, address):
+    """
+    The client handler handles client requests by
+    deserializing the payload and calling the appropriate 
+    functions defined to handle the sent commands
+
+    The supported commands are:
+    REGISTER
+    SEND_MSG <RECV> <MSG>
+    CREATE_GROUP <NAME>
+    JOIN_GROUP <NAME>
+    LEAVE_GROUP <NAME>
+
+    connection: socket object representing sender's connection
+    address: tuple representing sender's address
+    """
     global server
     # Receive data from client
     try:
@@ -182,6 +223,15 @@ def client_handler(connection, address):
 
 
 def accept_heartbeats(connection, address, command):
+    """
+    helper function to send acknowledgements to received
+    heartbeat messages
+
+    connection: socket object representing the sender
+    address: tuple representing the sender's address
+    command: command received (eg. HEARTBEAT)
+    """
+
     # Receive data from rm
     logger.info("Start accept heartbeats")
     if command == "HEARTBEAT":
@@ -205,6 +255,13 @@ def accept_heartbeats(connection, address, command):
 
 
 def accept_connections(ServerSocket, target_func=client_handler):
+    """
+    helper function to accept incoming connections and
+    call the appropriate client handler
+
+    ServerSocket: server socket object representing the listening socket
+    target_func: The function to handle incoming connections (client_handler) 
+    """
     client, address = ServerSocket.accept()
 
     # logger.info("Connected to: " + address[0] + ":" + str(address[1]))
@@ -213,6 +270,15 @@ def accept_connections(ServerSocket, target_func=client_handler):
 
 
 def main_primary(ServerSocket):
+    """
+    main function which periodically sends checkpoints to 
+    backup servers, while continually listening for incoming 
+    connections and dispatching them appropriately using the 
+    accept_connection method
+
+    serversocket: socket object representing the primary
+    server's listening socket
+    """
     start_new_thread(send_ckpts, ())
 
     logger.info("Server is listening on the port {}".format(PORT))
@@ -229,6 +295,16 @@ def main_primary(ServerSocket):
 
 
 def main_backup(ServerSocket):
+    """
+    function for backup server's operation, if the backup is
+    promoted to main_primary it invokes main_primary method
+    otherwise it continues to listen to incoming checkpoint
+    messages and client connections and dispatches them to
+    the appropriate handler
+
+    serversocket: socket object representing the primary
+    server's listening socket
+    """
     global backup
 
     # Create a socket and bind to a port. SO_REUSEADDR=1 for reusing address

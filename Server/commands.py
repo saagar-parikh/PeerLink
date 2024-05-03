@@ -30,7 +30,6 @@ class ReturnValueThread(threading.Thread):
 
 
 def send_msg(client_payload, host, port):
-
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.connect((host, port))
