@@ -13,6 +13,7 @@ The following tests have been created to test our implementation:
 
  ----
 
+
 ### Test_Register ###
 Checks if a client can successfully register with the server.
 The test creates multiple clients and successfuly verifies that they are able to register using the REGISTER command

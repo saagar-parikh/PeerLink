@@ -29,6 +29,13 @@ python Server/server.py --port 8009 --backup
 python rm.py
 ```
 
+# Steps to run code locally
+ Using the makefile is the easiest way to run our code
+
+ - make build
+ - make clean
+ - make test
+
 ## Supported commands
 
 - REGISTER
