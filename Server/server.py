@@ -29,7 +29,7 @@ global_queue = PyCentralDispatch.global_queue()
 server = Server()
 
 HOST_LIST = [("localhost", 8008), ("localhost", 8009)]  # , ("localhost", 8010)]
-CHECKPOINT_INTERVAL = 5
+CHECKPOINT_INTERVAL = 1
 backup = args.backup
 
 
@@ -159,7 +159,7 @@ def client_handler(connection, address):
         success = server.leave_group(payload)
     else:
         # TODO: Invalid command
-        success = {payload["sender"]: False}
+        success = {payload["recipient"]: False}
         # pass
 
     # success is a dict with ID: (True or False)

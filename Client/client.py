@@ -131,6 +131,7 @@ def client_handler(connection, address):
         return
     else:
         print(payload["sender"], ":", payload["message"])
+        sys.stdout.flush()
 
     connection.close()
 
@@ -144,7 +145,7 @@ def accept_connections(ServerSocket):
     # logger.info("Connected to: " + address[0] + ":" + str(address[1]))
     # print("here")
     global_queue.dispatch_sync(client_handler, args=(client, address))
-    sys.stdout.flush()
+    # sys.stdout.flush()
     # start_new_thread(client_handler, (client, address))
 
 
@@ -166,7 +167,7 @@ def router_listener():
         except KeyboardInterrupt:
             logger.warning("Keyboard interrupt")
             break
-        sys.stdout.flush()
+        # sys.stdout.flush()
 
 
 def main():

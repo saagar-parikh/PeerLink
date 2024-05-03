@@ -114,7 +114,7 @@ class Server:
             i = 0
             while i < len(self.client_addr[client_name].queue):
                 send_payload = self.client_addr[client_name].queue[i]
-                print("Sending ", send_payload["message"])
+                logger.send("Sending ", send_payload["message"])
                 thread = ReturnValueThread(
                     target=send_msg,
                     args=(
@@ -127,7 +127,7 @@ class Server:
                 success = thread.join()
                 if success:
                     self.client_addr[client_name].queue.remove(send_payload)
-                    print("Sent ", send_payload["message"])
+                    logger.send("Sent ", send_payload["message"])
                 else:
                     i += 1
         success = {client_name: True}
@@ -154,7 +154,7 @@ class Server:
             # add to queue when false
             if not success[recipient.ID]:
                 recipient.queue.append(send_payload)
-            print("Sent to", recipient.ID, recipient.port, success[recipient.ID])
+            logger.info("Sent to", recipient.ID, recipient.port, success[recipient.ID])
             return success
 
         # Check if recipient is a group
