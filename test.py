@@ -14,15 +14,28 @@ class TestClient(unittest.TestCase):
         process.kill()
         process.wait()
 
-    def new_client(self, ID, port):
-        client_args = [
-            "/usr/bin/python3",
-            "Client/client.py",
-            "--ID",
-            ID,
-            "--port",
-            port,
-        ]
+    def new_client(self, ID, port, show_logs=False):
+        if show_logs:
+            client_args = [
+                "/usr/bin/python3",
+                "Client/client.py",
+                "--ID",
+                ID,
+                "--port",
+                port,
+                "--show_logs",
+                "true",
+            ]
+
+        else:
+            client_args = [
+                "/usr/bin/python3",
+                "Client/client.py",
+                "--ID",
+                ID,
+                "--port",
+                port,
+            ]
         return Popen(client_args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
     def new_server(self, port, backup=False):
@@ -157,12 +170,14 @@ class TestClient(unittest.TestCase):
         self.check_output(self.client1, "peer2 (group1) : Hello group from peer2")
         self.check_output(self.client3, "peer2 (group1) : Hello group from peer2")
 
-        # Create new group
+        # Create new groups
         self.write_command(self.client2, "CREATE_GROUP group2\n")
         self.write_command(self.client2, "CREATE_GROUP group3\n")
-        time.sleep(0.1)
-        self.check_output(self.sp, "Group group2 created successfully")
+        print("done")
+        time.sleep(0.5)
         self.check_output(self.sp, "Group group3 created successfully")
+        self.check_output(self.sp, "Group group2 created successfully")
+        print("done2")
 
         # Join new group
         self.write_command(self.client3, "JOIN_GROUP group2\n")
@@ -192,6 +207,23 @@ class TestClient(unittest.TestCase):
         self.write_command(self.client1, "SEND_MSG group3 Hello group3\n")
         time.sleep(0.5)
         self.check_output(self.client2, "peer1 (group3) : Hello group3")
+
+    def test_message_states(self):
+        client1 = self.new_client("peer4", "8050", True)
+        client2 = self.new_client("peer5", "8051", True)
+        client3 = self.new_client("peer6", "8052", True)
+
+        # Register all clients
+        self.write_command(client1, "REGISTER\n")
+        self.check_output(self.sp, "Client peer4 registered successfully")
+        self.write_command(client2, "REGISTER\n")
+        self.check_output(self.sp, "Client peer5 registered successfully")
+        self.write_command(client3, "REGISTER\n")
+        self.check_output(self.sp, "Client peer6 registered successfully")
+
+        self.kill_process(client1)
+        self.kill_process(client2)
+        self.kill_process(client3)
 
 
 if __name__ == "__main__":

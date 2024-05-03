@@ -16,6 +16,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--ID", type=str, required=True, help="Client ID")
 parser.add_argument("--port", type=int, required=True, help="Client port")
 parser.add_argument("--router_port", type=int, default=8008, help="Router port")
+parser.add_argument(
+    "--show_logs", type=str, default="false", help="Display message states"
+)
 args = parser.parse_args()
 
 ID = args.ID
@@ -49,9 +52,15 @@ def send_msg(client_payload, host, port):
         # Receive data from the server
         received = json.loads(sock.recv(1024).decode("utf-8"))
         logger.send(f"Sent")
+        if args.show_logs == "true":
+            print("Sent")
+            sys.stdout.flush()
         for k, v in received["success"].items():
             if v:
                 logger.send(f"Delivered to {k}")
+                if args.show_logs == "true":
+                    print(f"Delivered to {k}")
+                    sys.stdout.flush()
 
     except socket.error as e:
         logger.error("Server is down " + str(e))
